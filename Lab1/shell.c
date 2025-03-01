@@ -5,8 +5,7 @@ int main() {
     return 0;
 }
 
-void shellLoop()
-{
+void shellLoop(){
     char *line;
     char **args;
     int status = 1;
@@ -19,15 +18,14 @@ void shellLoop()
     } while (status);
 }
 
-char *shellReadLine()
-{
+char *shellReadLine(){
     char *line = malloc(100 * sizeof(char));
-    scanf("%[^\n]%*c", line);
+    scanf("%[^\n]", line);
+    getchar();
     return line;
 }
 
-char **shellSplitLine(char *line)
-{
+char **shellSplitLine(char *line){
     char **args = malloc(100 * sizeof(char *));
     char *token = strtok(line, " ");
     int i = 0;
@@ -41,8 +39,7 @@ char **shellSplitLine(char *line)
     return args;
 }
 
-int shellExecute(char **args)
-{
+int shellExecute(char **args){
     if (args[0] == NULL) return 1;
 
     if (strcmp(args[0], "cd") == 0) return shellCd(args);
@@ -53,8 +50,7 @@ int shellExecute(char **args)
     else return shellLaunch(args);
 }
 
-int shellLaunch(char **args)
-{
+int shellLaunch(char **args){
     pid_t pid, wpid;
     int status;
 
@@ -67,16 +63,18 @@ int shellLaunch(char **args)
     else if (pid < 0) perror("Failed creating a child process");
     else
     {
-        do
-        {
-            wpid = waitpid(pid, &status, WUNTRACED);
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        if (args[1] != NULL && strcmp(args[1], "&") == 0);
+        else {
+            do
+            {
+                wpid = waitpid(pid, &status, WUNTRACED);
+            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        }
     }
     return 1;
 }
 
-int shellCd(char **args)
-{
+int shellCd(char **args){
     char* home = getenv("HOME");
     if (args[1] == NULL)
     {
@@ -94,13 +92,11 @@ int shellCd(char **args)
     return 1;
 }
 
-int shellExit(char **args)
-{
+int shellExit(char **args){
     return 0;
 }
 
-int shellHelp(char **args)
-{
+int shellHelp(char **args){
     printf("Shell implemented in C\n");
     printf("Commands:\n");
     printf("cd <directory> - change directory\n");
@@ -109,8 +105,7 @@ int shellHelp(char **args)
     return 1;
 }
 
-int shellExport(char **args)
-{
+int shellExport(char **args){
     if (args[1] == NULL) fprintf(stderr, "shell: expected argument to \"export\"\n");
     else
     {
@@ -119,8 +114,7 @@ int shellExport(char **args)
     return 1;
 }
 
-int shellEcho(char **args)
-{
+int shellEcho(char **args){
     if (args[1] == NULL) fprintf(stderr, "shell: expected argument to \"echo\"\n");
     else
     {
@@ -130,8 +124,7 @@ int shellEcho(char **args)
     return 1;
 }
 
-int shellNumBuiltins()
-{
+int shellNumBuiltins(){
     return 5;
 }
 
