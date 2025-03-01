@@ -43,27 +43,14 @@ char **shellSplitLine(char *line)
 
 int shellExecute(char **args)
 {
-    if (args[0] == NULL)
-    {
-        return 1;
-    }
+    if (args[0] == NULL) return 1;
 
-    if (strcmp(args[0], "cd") == 0)
-    {
-        return shellCd(args);
-    }
-    else if (strcmp(args[0], "exit") == 0)
-    {
-        return shellExit(args);
-    }
-    else if (strcmp(args[0], "help") == 0)
-    {
-        return shellHelp(args);
-    }
-    else
-    {
-        return shellLaunch(args);
-    }
+    if (strcmp(args[0], "cd") == 0) return shellCd(args);
+    else if (strcmp(args[0], "exit") == 0) return shellExit(args);
+    else if (strcmp(args[0], "help") == 0) return shellHelp(args);
+    else if (strcmp(args[0], "export") == 0) return shellExport(args);
+    else if (strcmp(args[0], "echo") == 0) return shellEcho(args);
+    else return shellLaunch(args);
 }
 
 int shellLaunch(char **args)
@@ -74,16 +61,10 @@ int shellLaunch(char **args)
     pid = fork();
     if (pid == 0)
     {
-        if (execvp(args[0], args) == -1)
-        {
-            perror("Failed executing command");
-        }
+        if (execvp(args[0], args) == -1) perror("Failed executing command");
         exit(EXIT_FAILURE);
     }
-    else if (pid < 0)
-    {
-        perror("Failed creating a child process");
-    }
+    else if (pid < 0) perror("Failed creating a child process");
     else
     {
         do
@@ -91,22 +72,24 @@ int shellLaunch(char **args)
             wpid = waitpid(pid, &status, WUNTRACED);
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
-
     return 1;
 }
 
 int shellCd(char **args)
 {
+    char* home = getenv("HOME");
     if (args[1] == NULL)
     {
-        fprintf(stderr, "shell: expected argument to \"cd\"\n");
+        if (chdir(home) != 0) perror("Error changing directory");
+        
     }
     else
     {
-        if (chdir(args[1]) != 0)
+        if (args[1][0] == '$')
         {
-            perror("Erorr changing directory");
+            if (chdir(getenv(args[1] + 1)) != 0) perror("Error changing directory");   
         }
+        else if (chdir(args[1]) != 0) perror("Erorr changing directory");
     }
     return 1;
 }
@@ -126,8 +109,29 @@ int shellHelp(char **args)
     return 1;
 }
 
+int shellExport(char **args)
+{
+    if (args[1] == NULL) fprintf(stderr, "shell: expected argument to \"export\"\n");
+    else
+    {
+        if (putenv(args[1]) != 0) perror("Error exporting variable");
+    }
+    return 1;
+}
+
+int shellEcho(char **args)
+{
+    if (args[1] == NULL) fprintf(stderr, "shell: expected argument to \"echo\"\n");
+    else
+    {
+        if (args[1][0] == '$') printf("%s\n", getenv(args[1] + 1));
+        else printf("%s\n", args[1]);
+    }
+    return 1;
+}
+
 int shellNumBuiltins()
 {
-    return 3;
+    return 5;
 }
 
