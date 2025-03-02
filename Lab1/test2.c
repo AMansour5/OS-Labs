@@ -1,11 +1,47 @@
-#include "shell.h"
-#include "utilities.c"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <signal.h>
+
+// Function declarations
+void shellLoop();
+void setupEnvironment();
+void onChildExit(int sig);
+char *shellReadLine();
+char **shellSplitLine(char *line);
+int shellExecute(char **args);
+int shellLaunch(char **args);
+int shellCd(char **args);
+int shellExport(char **args);
+int shellEcho(char **args);
+int shellExit(char **args);
+int shellHelp(char **args);
+char *removeQuotes(char *str);
+
 
 int main() {
     signal(SIGCHLD, onChildExit);
     setupEnvironment();
     shellLoop();
     return 0;
+}
+
+char *removeQuotes(char *str){
+    char *new_str = malloc(strlen(str) * sizeof(char));
+    if (str[0] == '\"' || str[0] == '\''){
+        int i = 1;
+        while (str[i] != str[0]){
+            new_str[i - 1] = str[i];
+            i++;
+        }
+        new_str[i - 1] = '\0';
+        return new_str;
+    }
+    else return str;
 }
 
 void setupEnvironment(){
