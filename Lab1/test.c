@@ -22,10 +22,9 @@ int shellExit(char **args);
 int shellHelp(char **args);
 char *removeQuotes(char *str);
 
-
 int main() {
     signal(SIGCHLD, onChildExit);
-    setupEnvironment();
+    // setupEnvironment();
     shellLoop();
     return 0;
 }
