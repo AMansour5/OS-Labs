@@ -1,8 +1,26 @@
 #include "shell.h"
 
 int main() {
+    signal(SIGCHLD, onChildExit);
+    setupEnvironment();
     shellLoop();
     return 0;
+}
+
+void setupEnvironment(){
+    char *home = getenv("HOME");
+    if (home == NULL) perror("Error getting HOME variable");
+    if (chdir(home) != 0) perror("Error changing directory");
+}
+
+void onChildExit(int sig){
+    int status;
+    pid_t pid;
+    pid = waitpid(-1, &status,0);
+    if (pid > 0){
+        if (WIFEXITED(status)) printf("Child %d exited with status %d\n", pid, WEXITSTATUS(status));
+        else printf("Child %d exited abnormally\n", pid);
+    }
 }
 
 void shellLoop(){
@@ -29,8 +47,7 @@ char **shellSplitLine(char *line){
     char **args = malloc(100 * sizeof(char *));
     char *token = strtok(line, " ");
     int i = 0;
-    while (token != NULL)
-    {
+    while (token != NULL){
         args[i] = token;
         token = strtok(NULL, " ");
         i++;
@@ -55,16 +72,14 @@ int shellLaunch(char **args){
     int status;
 
     pid = fork();
-    if (pid == 0)
-    {
+    if (pid == 0){
         if (execvp(args[0], args) == -1) perror("Failed executing command");
         exit(EXIT_FAILURE);
     }
     else if (pid < 0) perror("Failed creating a child process");
-    else
-    {
+    else{
         if (args[1] != NULL && strcmp(args[1], "&") == 0);
-        else {
+        else{
             do
             {
                 wpid = waitpid(pid, &status, WUNTRACED);
@@ -76,15 +91,12 @@ int shellLaunch(char **args){
 
 int shellCd(char **args){
     char* home = getenv("HOME");
-    if (args[1] == NULL)
-    {
+    if (args[1] == NULL){
         if (chdir(home) != 0) perror("Error changing directory");
         
     }
-    else
-    {
-        if (args[1][0] == '$')
-        {
+    else{
+        if (args[1][0] == '$'){
             if (chdir(getenv(args[1] + 1)) != 0) perror("Error changing directory");   
         }
         else if (chdir(args[1]) != 0) perror("Erorr changing directory");
@@ -107,8 +119,7 @@ int shellHelp(char **args){
 
 int shellExport(char **args){
     if (args[1] == NULL) fprintf(stderr, "shell: expected argument to \"export\"\n");
-    else
-    {
+    else{
         if (putenv(args[1]) != 0) perror("Error exporting variable");
     }
     return 1;
@@ -116,15 +127,11 @@ int shellExport(char **args){
 
 int shellEcho(char **args){
     if (args[1] == NULL) fprintf(stderr, "shell: expected argument to \"echo\"\n");
-    else
-    {
+    else{
         if (args[1][0] == '$') printf("%s\n", getenv(args[1] + 1));
         else printf("%s\n", args[1]);
     }
     return 1;
 }
 
-int shellNumBuiltins(){
-    return 5;
-}
 
