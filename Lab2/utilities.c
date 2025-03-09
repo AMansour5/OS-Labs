@@ -60,7 +60,6 @@ Matrix readMatrix(char *matrix_name){
 }
 
 void writeMatrix(Matrix *matrix, char *file_name){
-    strcat(file_name, ".txt");
     FILE *file = fopen(file_name, "w");
     if (file == NULL){
         perror("Error creating file to write matrix");

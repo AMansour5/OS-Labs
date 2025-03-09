@@ -15,7 +15,7 @@
 
 int PWD();
 void printMatrix(Matrix *matrix);
-Matrix readMatrix(char *matix_name);
+Matrix readMatrix(char *matrix_name);
 void writeMatrix(Matrix *matrix, char *file_name);
 
 

@@ -18,10 +18,11 @@ typedef struct {
 } Matrix;
 
 
-void *matrixMultiplication();
-void *threadPerMatrix();
-void *threadPerRow();
-void *threadPerElement();
+void matrixMultiplication(Matrix *matrix_a, Matrix *matrix_b, char *matix_name);
+void threadPerMatrix(Matrix *matrix_a, Matrix *matrix_b, char *martix_name);
+void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *martix_name);
+void* multiplyRow(void *arg);
+void threadPerElement(Matrix *matrix_a, Matrix *matrix_b, char *martix_name);
 
 #endif /* MATRIX_LIB_H */
 
