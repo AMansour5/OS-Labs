@@ -76,7 +76,7 @@ void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
         exit(EXIT_FAILURE);
     }
     pthread_t *threads = malloc(result.rows * sizeof(pthread_t));
-    ThreadData *thread_data = malloc(result.rows * sizeof(ThreadData));
+    ThreadRow *thread_data = malloc(result.rows * sizeof(ThreadRow));
     if (!threads || !thread_data) {
         perror("Memory allocation failed for threads");
         free(result.data);
@@ -102,7 +102,7 @@ void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
 }
 
 void* multiplyRow(void *arg){
-    ThreadData *data = (ThreadData *) arg;
+    ThreadRow *data = (ThreadRow *) arg;
     int row = data->row;
     Matrix *A = data->matrix_a;
     Matrix *B = data->matrix_b;
