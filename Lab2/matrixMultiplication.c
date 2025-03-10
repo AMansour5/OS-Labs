@@ -1,8 +1,8 @@
 #include "matrixMultiplication.h"
 #include "utilities.c"
+struct timeval start, stop;
 
 int main(int argc, char *argv[]){
-    struct timeval start, stop;
     gettimeofday(&start, NULL);
     char *output_matrix_name;
     char *file2_name;
@@ -32,17 +32,18 @@ int main(int argc, char *argv[]){
     }
     matrixMultiplication(&matrix_1, &matrix_2, output_matrix_name);
     gettimeofday(&stop, NULL);
-    printf("Seconds taken %lu\n", stop.tv_sec - start.tv_sec);
-    printf("Microseconds taken: %lu\n", stop.tv_usec - start.tv_usec);
+    printf("Seconds taken by whole program  %lu\n", stop.tv_sec - start.tv_sec);
+    printf("Microseconds taken by whole program: %lu\n", stop.tv_usec - start.tv_usec);
 }
 
 void matrixMultiplication(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     threadPerMatrix(matrix_a, matrix_b, matrix_name);
     threadPerRow(matrix_a, matrix_b, matrix_name);
-    // threadPerElement(matrix_a, matrix_b, martix_name);
+    threadPerElement(matrix_a, matrix_b, matrix_name);
 }
 
 void threadPerMatrix(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
+    gettimeofday(&start, NULL);
     Matrix result;
     result.rows = matrix_a->rows;
     result.cols = matrix_b->cols;
@@ -64,9 +65,12 @@ void threadPerMatrix(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     } 
     strcat(matrix_name, "__per_matrix");
     writeMatrix(&result, matrix_name);
-    free(result.data);  
+    free(result.data);
+    printf("Seconds taken by thread per matrix  %lu\n", stop.tv_sec - start.tv_sec);
+    printf("Microseconds taken by thread per matrix: %lu\n", stop.tv_usec - start.tv_usec);  
 }
 void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
+    gettimeofday(&start, NULL);
     Matrix result;
     result.rows = matrix_a->rows;
     result.cols = matrix_b->cols;
@@ -99,6 +103,8 @@ void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     strcat(matrix_name, "__per_row");
     writeMatrix(&result, matrix_name);  
     free(result.data);
+    printf("Seconds taken by thread per row  %lu\n", stop.tv_sec - start.tv_sec);
+    printf("Microseconds taken by thread per row: %lu\n", stop.tv_usec - start.tv_usec);
 }
 
 void* multiplyRow(void *arg){
@@ -117,5 +123,63 @@ void* multiplyRow(void *arg){
     return NULL;
 }
 
+void threadPerElement(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
+    gettimeofday(&start, NULL);
+    Matrix result;
+    result.rows = matrix_a->rows;
+    result.cols = matrix_b->cols;
+    result.data = malloc(result.rows * result.cols * sizeof(int));
+    if (result.data == NULL) {
+        perror("Memory allocation failed for result matrix");
+        exit(EXIT_FAILURE);
+    }
+    int num_elements = result.rows * result.cols;
+    pthread_t *threads = malloc(num_elements * sizeof(pthread_t));
+    ThreadElement *thread_data = malloc(num_elements * sizeof(ThreadElement));
+    if (!threads || !thread_data) {
+        perror("Memory allocation failed for threads");
+        free(result.data);
+        free(threads);
+        free(thread_data);
+        exit(EXIT_FAILURE);
+    }
+    int index = 0;
+    for (int i = 0; i < result.rows; i++) {
+        for (int j = 0; j < result.cols; j++) {
+            thread_data[index].row = i;
+            thread_data[index].col = j;
+            thread_data[index].matrix_a = matrix_a;
+            thread_data[index].matrix_b = matrix_b;
+            thread_data[index].result = &result;
+            
+            pthread_create(&threads[index], NULL, multiplyElement, &thread_data[index]);
+            index++;
+        }
+    }
+    for (int i = 0; i < num_elements; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    free(threads);
+    free(thread_data);
+    strcat(matrix_name, "__per_element");
+    writeMatrix(&result, matrix_name);  
+    free(result.data);
+    printf("Seconds taken by thread per element  %lu\n", stop.tv_sec - start.tv_sec);
+    printf("Microseconds taken by thread per element: %lu\n", stop.tv_usec - start.tv_usec);
+}
+
+
+void* multiplyElement(void *arg) {
+    ThreadElement *data = (ThreadElement *) arg;
+    int i = data->row;
+    int j = data->col;
+    int sum = 0;
+    for (int k = 0; k < data->matrix_a->cols; k++) {
+        sum += data->matrix_a->data[i * data->matrix_a->cols + k] *
+               data->matrix_b->data[k * data->matrix_b->cols + j];
+    }
+    data->result->data[i * data->result->cols + j] = sum;
+    return NULL;
+}
 
 
