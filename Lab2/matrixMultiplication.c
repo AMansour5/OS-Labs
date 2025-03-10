@@ -45,6 +45,8 @@ void matrixMultiplication(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name)
 void threadPerMatrix(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     gettimeofday(&start, NULL);
     Matrix result;
+    char *name;
+    name = strdup(matrix_name);
     result.rows = matrix_a->rows;
     result.cols = matrix_b->cols;
     result.data = malloc(result.rows * result.cols * sizeof(int));
@@ -63,14 +65,16 @@ void threadPerMatrix(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
             result.data[i * result.cols + j] = sum;
         }
     } 
-    strcat(matrix_name, "__per_matrix");
-    writeMatrix(&result, matrix_name);
+    strcat(name, "__per_matrix.txt");
+    writeMatrix(&result, name);
     free(result.data);
     printf("Seconds taken by thread per matrix  %lu\n", stop.tv_sec - start.tv_sec);
     printf("Microseconds taken by thread per matrix: %lu\n", stop.tv_usec - start.tv_usec);  
 }
 void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     gettimeofday(&start, NULL);
+    char *name;
+    name = strdup(matrix_name);
     Matrix result;
     result.rows = matrix_a->rows;
     result.cols = matrix_b->cols;
@@ -100,8 +104,8 @@ void threadPerRow(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     }
     free(threads);
     free(thread_data);
-    strcat(matrix_name, "__per_row");
-    writeMatrix(&result, matrix_name);  
+    strcat(name, "_per_row.txt");
+    writeMatrix(&result, name);  
     free(result.data);
     printf("Seconds taken by thread per row  %lu\n", stop.tv_sec - start.tv_sec);
     printf("Microseconds taken by thread per row: %lu\n", stop.tv_usec - start.tv_usec);
@@ -125,6 +129,8 @@ void* multiplyRow(void *arg){
 
 void threadPerElement(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     gettimeofday(&start, NULL);
+    char *name;
+    name = strdup(matrix_name);
     Matrix result;
     result.rows = matrix_a->rows;
     result.cols = matrix_b->cols;
@@ -161,8 +167,8 @@ void threadPerElement(Matrix *matrix_a, Matrix *matrix_b, char *matrix_name){
     }
     free(threads);
     free(thread_data);
-    strcat(matrix_name, "__per_element");
-    writeMatrix(&result, matrix_name);  
+    strcat(name, "__per_element.txt");
+    writeMatrix(&result, name);  
     free(result.data);
     printf("Seconds taken by thread per element  %lu\n", stop.tv_sec - start.tv_sec);
     printf("Microseconds taken by thread per element: %lu\n", stop.tv_usec - start.tv_usec);
